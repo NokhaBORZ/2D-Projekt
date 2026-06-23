@@ -5,6 +5,55 @@
 
 ---
 
+## [2026-06-23] Robustere Fingerzählung bei sichtbarem Unterarm
+
+### Kurzbeschreibung
+Die Klassifikation wurde korrigiert, weil Testbilder mit sichtbarem Unterarm
+den Handflächenradius verfälscht haben und dadurch fast immer `Rock (0 fingers)`
+ausgegeben wurde.
+
+### Betroffene Bereiche
+- `src/features.py`
+- `src/classifier.py`
+
+### Was wurde umgesetzt?
+- Die bisherige strenge Convexity-Defect-Zählung bleibt für klare Fingerlücken
+  wie bei Schere erhalten.
+- Zusätzlich gibt es eine entspanntere Zählung breiter Defekte, die nur als
+  Fallback für offene Hände (`Paper / 5`) genutzt wird.
+- Wenn die radiale Zählung `0` liefert, überschreibt sie eine gültige
+  Convexity-Defect-Zählung nicht mehr.
+- Für `Thumbs Up` wurde ein Fallback über niedrige Solidity und begrenztes
+  Seitenverhältnis ergänzt, weil der Unterarm die Zeigerichtung verfälschen kann.
+
+### Warum wurde es so umgesetzt?
+Der Unterarm ist in den Beispielbildern Teil der Hautmaske. Dadurch landet das
+Maximum der Distanztransformation teilweise am Unterarm statt in der Handfläche.
+Die radiale Fingerzählung versagt dann, obwohl die Kontur und die konvexe Hülle
+weiterhin brauchbare Informationen enthalten. Die Lösung kombiniert deshalb die
+vorhandenen Merkmale statt die Segmentierung komplett umzubauen.
+
+### Bezug zu Vorlesung / Skript / Buch
+- Lect 08 (Regionen): konvexe Hülle, Solidity/Dichte, Formmerkmale
+- Convexity Defects bleiben als bereits markierte externe OpenCV-Hilfsfunktion
+  im Einsatz.
+
+### Wichtige Erkenntnisse
+- Die Feature-Extraktion hängt stark davon ab, ob die Maske wirklich nur die
+  Hand oder auch den Unterarm enthält.
+- Mehrere Formmerkmale müssen sich gegenseitig absichern; eine einzelne
+  Fingerzählmethode ist bei realen Bildern zu fragil.
+
+### Relevanz für die Präsentation
+- Gutes Beispiel für eine typische CV-Herausforderung: Die Segmentierung ist
+  nicht perfekt, deshalb muss die Klassifikation robust gegen Störanteile sein.
+
+### Offene Punkte
+- Für beliebige Kamerapositionen wäre eine echte Hand-/Unterarm-Trennung als
+  eigener Schritt sinnvoll.
+
+---
+
 ## [2026-06-11] Projektstruktur + Stage 1 (Preprocessing) + Stage 2 (Segmentierung)
 
 ### Kurzbeschreibung

@@ -40,15 +40,19 @@ def skin_mask(preprocessed, method="ycrcb"):
     raise ValueError(f"unknown method: {method}")
 
 
-def clean_mask(mask, kernel_size=5, iterations=2):
-    """Morphological cleanup of the raw skin mask (Lect 07).
+def clean_mask(mask, kernel_size=5, iterations=2, median_size=5):
+    """Morphological cleanup of the raw skin mask (Lect 07 + Lect 04).
 
     Closing fills small holes inside the hand (e.g. shadows between
     fingers), opening then removes small noise blobs in the background.
+    A final median filter (Lect 04, non-linear filters) wipes the
+    salt-and-pepper speckle along the mask edge that makes the live mask
+    flicker, without rounding the fingers off as much as more closing would.
     """
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
     closed = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=iterations)
-    return cv2.morphologyEx(closed, cv2.MORPH_OPEN, kernel, iterations=iterations)
+    opened = cv2.morphologyEx(closed, cv2.MORPH_OPEN, kernel, iterations=iterations)
+    return cv2.medianBlur(opened, median_size)
 
 
 def largest_region(mask, min_area_ratio=0.01):
